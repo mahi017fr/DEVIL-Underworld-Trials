@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Level Devil - Level 7 (Stable Fix)</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Nosifer&family=Orbitron:wght@700&display=swap');
+        body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Orbitron', sans-serif; touch-action: none; }
+        #game-container { position: relative; width: 800px; height: 500px; background: radial-gradient(circle, #250000 0%, #000 100%); overflow: hidden; flex-shrink: 0; transition: transform 0.6s ease-in-out; }
+        .player { position: absolute; width: 30px; height: 30px; background: #fff; border-radius: 4px; z-index: 50; border: 2px solid #f00; box-shadow: 0 0 15px #f00; }
+        .platform { position: absolute; height: 40px; background: #111; border-top: 4px solid #f00; border-bottom: 2px solid #500; }
+        .ghost-plat { border-top: 4px solid #800; transition: opacity 0.2s; }
+        .key { position: absolute; width: 30px; height: 30px; background: #f00; border-radius: 50%; box-shadow: 0 0 15px #f00; z-index: 20; display: flex; align-items: center; justify-content: center; }
+        .goal { position: absolute; width: 75px; height: 85px; background: rgba(0,255,0,0.1); border: 3px solid #0f0; display: flex; align-items: center; justify-content: center; color: #0f0; text-shadow: 0 0 10px #0f0; z-index: 5; }
+        .ui { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 100; text-align: center; }
+        .ui h1 { font-family: 'Nosifer', cursive; color: #f00; font-size: 32px; margin-bottom: 25px; }
+        .btn-group { display: flex; gap: 10px; }
+        .ui-btn { padding: 12px 25px; cursor: pointer; border: 2px solid #f00; background: transparent; color: #fff; font-family: 'Orbitron'; border-radius: 50px; min-width: 120px; }
+        #controls { width: 100%; max-width: 800px; display: flex; justify-content: space-between; padding: 20px; z-index: 200; }
+        .btn { width: 75px; height: 75px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: bold; }
+        #status-msg { position: absolute; top: 15px; width: 100%; text-align: center; color: #f00; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="status-msg">LEVEL 7: GRAVITY MADNESS</div>
+    <div class="player" id="player"></div>
+    <div class="platform" style="width: 150px; left: 0; bottom: 0;"></div> 
+    <div class="platform ghost-plat" id="gp1" style="width: 120px; left: 250px; bottom: 150px;"></div> 
+    <div class="platform ghost-plat" id="gp2" style="width: 120px; left: 450px; bottom: 250px;"></div> 
+    <div class="platform" style="width: 150px; right: 0; bottom: 0;"></div> 
+    <div class="key" id="mainKey" style="left: 495px; bottom: 300px;">🔑</div>
+    <div class="goal" id="exitGoal" style="bottom: 40px; right: 20px;">EXIT</div>
+    <div class="ui" id="dieUI"><h1>SHATTERED</h1><div class="btn-group"><button class="ui-btn" onclick="location.reload()">RETRY</button><button class="ui-btn" onclick="location.href='index.html'">HOME</button></div></div>
+    <div class="ui" id="winUI"><h1 style="color:#0f0">CLEARED</h1><div class="btn-group"><button class="ui-btn" style="border-color:#0f0" onclick="location.href='lvl8.html'">NEXT</button><button class="ui-btn" onclick="location.href='index.html'">HOME</button></div></div>
+</div>
+<div id="controls">
+    <div style="display:flex; gap:20px;"><div class="btn" id="lBtn">←</div><div class="btn" id="rBtn">→</div></div>
+    <div class="btn" id="jBtn" style="width:90px; border-radius:15px;">UP</div>
+</div>
+<script>
+    const box = document.getElementById("game-container"), player = document.getElementById("player"), dieUI = document.getElementById("dieUI"), winUI = document.getElementById("winUI");
+    let pX = 20, pY = 40, vY = 0, gravity = 0.65, hasKey = false, keys = {}, jumps = 0, frame = 0;
+    function fit() { let sc = Math.min(window.innerWidth/800, (window.innerHeight-150)/500); box.style.transform = hasKey ? `scale(${sc}) rotate(180deg)` : `scale(${sc})`; }
+    window.onresize = fit; fit();
+    window.onkeydown = e => { if((e.code==="Space"||e.code==="ArrowUp")&&jumps<2) {vY = -13; jumps++;} keys[e.code]=true; };
+    window.onkeyup = e => keys[e.code]=false;
+    function setup(id,code){ const b=document.getElementById(id); b.onpointerdown=e=>{ e.preventDefault(); if(id==="jBtn"){ if(jumps<2){ vY=-13; jumps++; } } else keys[code]=true; }; b.onpointerup=e=>{ e.preventDefault(); keys[code]=false; }; }
+    setup("lBtn","ArrowLeft"); setup("rBtn","ArrowRight"); setup("jBtn","Space");
+    function loop() {
+        if(dieUI.style.display==="flex"||winUI.style.display==="flex") return;
+        frame++; let speed = 5.5;
+        if(hasKey) { if(keys["ArrowLeft"]) pX += speed; if(keys["ArrowRight"]) pX -= speed; }
+        else { if(keys["ArrowLeft"]) pX -= speed; if(keys["ArrowRight"]) pX += speed; }
+        vY += gravity; pY -= vY;
+        // Collision logic (Bottom fixed)
+        if(pY<=40) {
+            if(pX<135 || pX>635) { pY=40; vY=0; jumps=0; }
+        }
+        // Ghost platforms
+        if(pY<=190 && pY>=150 && pX>235 && pX<355 && frame%100<70) { pY=190; vY=0; jumps=0; }
+        if(pY<=290 && pY>=250 && pX>435 && pX<555 && frame%120<80) { pY=290; vY=0; jumps=0; }
+        document.getElementById("gp1").style.opacity = (frame%100<70)?"1":"0.2";
+        document.getElementById("gp2").style.opacity = (frame%120<80)?"1":"0.2";
+        // Key Catch
+        if(!hasKey && pX>470 && pX<520 && pY>280) { 
+            hasKey=true; document.getElementById("mainKey").style.display="none"; 
+            document.getElementById("status-msg").innerText = "CONTROLS REVERSED!";
+            fit();
+        }
+        if(pY<-100) dieUI.style.display="flex";
+        pX=Math.max(0,Math.min(770,pX)); player.style.left = pX+"px"; player.style.bottom = pY+"px";
+        if(hasKey && pX>700 && pY<100) winUI.style.display="flex";
+        requestAnimationFrame(loop);
+    }
+    loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Level Devil - Level 5 Fixed</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Nosifer&family=Orbitron:wght@700&display=swap');
+        body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Orbitron', sans-serif; touch-action: none; }
+        #game-container { position: relative; width: 800px; height: 500px; background: radial-gradient(circle, #200000 0%, #000 100%); overflow: hidden; flex-shrink: 0; transition: transform 0.2s linear; }
+        .player { position: absolute; width: 30px; height: 30px; background: #fff; border: 2px solid #f00; box-shadow: 0 0 15px #f00; border-radius: 4px; z-index: 20; }
+        .platform { position: absolute; height: 40px; background: #111; border-top: 4px solid #f00; }
+        .platform.ceiling { bottom: auto; top: 0; border-top: none; border-bottom: 4px solid #f00; }
+        .spike { position: absolute; width: 30px; height: 30px; background: #ff4d4d; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+        .gravity-gate { position: absolute; width: 10px; height: 100px; background: #f00; left: 400px; bottom: 0; box-shadow: 0 0 20px #f00; opacity: 0.8; }
+        .goal { position: absolute; width: 80px; height: 60px; background: rgba(0,255,0,0.1); bottom: 40px; right: 20px; border: 3px solid #0f0; display: flex; align-items: center; justify-content: center; color: #0f0; text-shadow: 0 0 10px #0f0; z-index: 5; }
+        .ui { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 100; }
+        .ui h1 { font-family: 'Nosifer', cursive; font-size: 30px; color: #f00; text-shadow: 0 0 20px #f00; margin-bottom: 20px; }
+        .ui-btn { padding: 12px 25px; cursor: pointer; border: 2px solid #f00; background: transparent; color: #fff; font-family: 'Orbitron'; border-radius: 50px; min-width: 120px; margin: 5px; }
+        #controls { width: 100%; max-width: 800px; display: flex; justify-content: space-between; padding: 20px; z-index: 200; }
+        .btn { width: 75px; height: 75px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+        #status-msg { position: absolute; top: 15px; width: 100%; text-align: center; color: #f00; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="status-msg">LEVEL 5: GRAVITY GLITCH</div>
+    <div class="player" id="player"></div>
+    <div class="platform" style="width: 200px; left: 0; bottom: 0;"></div> 
+    <div class="platform" style="width: 200px; left: 600px; bottom: 0;"></div> 
+    <div class="platform ceiling" style="width: 300px; left: 250px; height: 40px;"></div>
+    <div class="gravity-gate"></div>
+    <div class="spike" style="left: 250px; bottom: 0;"></div>
+    <div class="spike" style="left: 520px; bottom: 0;"></div>
+    <div class="goal" id="exitGoal">EXIT</div>
+    <div class="ui" id="dieUI"><h1>SHATTERED</h1><button class="ui-btn" onclick="resetGame()">RETRY</button><button class="ui-btn" onclick="location.href='index.html'">HOME</button></div>
+    <div class="ui" id="winUI"><h1 style="color:#0f0">SURVIVOR</h1><button class="ui-btn" style="border-color:#0f0" onclick="location.href='lvl6.html'">NEXT</button><button class="ui-btn" onclick="location.href='index.html'">HOME</button></div>
+</div>
+<div id="controls">
+    <div style="display:flex; gap:20px;"><div class="btn" id="leftBtn">←</div><div class="btn" id="rightBtn">→</div></div>
+    <div class="btn" id="jumpBtn" style="width:90px; border-radius:15px;">UP</div>
+</div>
+<script>
+    const container=document.getElementById("game-container"), p=document.getElementById("player"), goal=document.getElementById("exitGoal"), dieUI=document.getElementById("dieUI"), winUI=document.getElementById("winUI");
+    let pX=20, pY=40, vY=0, gravity=0.6, jPow=-12, jumps=0, keys={}, gDir=1, goalSwapped=false;
+    function fit(){ let sc=Math.min(window.innerWidth/800, (window.innerHeight-150)/500); container.style.transform=`scale(${sc})`; }
+    window.onresize=fit; fit();
+    window.onkeydown=e=>{ keys[e.code]=true; if((e.code==="Space"||e.code==="ArrowUp")&&jumps<2){ vY=jPow*gDir; jumps++; }};
+    window.onkeyup=e=>keys[e.code]=false;
+    function setupTouch(id,code){ const b=document.getElementById(id); b.onpointerdown=e=>{ e.preventDefault(); if(id==="jumpBtn"){ if(jumps<2){ vY=jPow*gDir; jumps++; } } else keys[code]=true; }; b.onpointerup=e=>{ e.preventDefault(); keys[code]=false; }; }
+    setupTouch("leftBtn","ArrowLeft"); setupTouch("rightBtn","ArrowRight"); setupTouch("jumpBtn","Space");
+    function loop() {
+        if(dieUI.style.display==="flex"||winUI.style.display==="flex") return;
+        if(keys["ArrowLeft"]) pX-=5; if(keys["ArrowRight"]) pX+=5;
+        if(pX>400&&pX<415&&gDir===1){ gDir=-1; document.getElementById("status-msg").innerText="GRAVITY REVERSED!"; }
+        vY+=gravity*gDir; pY-=vY;
+        if(gDir===1){ if(pY<=40&&(pX<185||pX>585)){ pY=40; vY=0; jumps=0; } }
+        else{ if(pY>=430&&(pX>230&&pX<530)){ pY=430; vY=0; jumps=0; } }
+        if(!goalSwapped&&pX>620){ goalSwapped=true; goal.style.right="auto"; goal.style.left="20px"; goal.style.bottom="400px"; document.getElementById("status-msg").innerText="WHERE IS THE EXIT?"; }
+        if(pY<-100||pY>600||(pX>240&&pX<275&&pY<50)||(pX>510&&pX<545&&pY<50)) dieUI.style.display="flex";
+        if(goalSwapped&&pX<100&&pY>350) winUI.style.display="flex";
+        pX=Math.max(0,Math.min(770,pX)); p.style.left=pX+"px"; p.style.bottom=pY+"px";
+        requestAnimationFrame(loop);
+    }
+    function resetGame(){ pX=20; pY=40; vY=0; jumps=0; gDir=1; goalSwapped=false; goal.style.left="auto"; goal.style.right="20px"; goal.style.bottom="40px"; dieUI.style.display="none"; document.getElementById("status-msg").innerText="LEVEL 5: GRAVITY GLITCH"; requestAnimationFrame(loop); }
+    loop();
+</script>
+</body>
+</html>

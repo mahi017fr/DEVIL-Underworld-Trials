@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Level Devil | Elite Edition</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Nosifer&family=Poppins:wght@700&family=Orbitron:wght@900&display=swap');
+        
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Poppins', sans-serif; }
+        
+        /* Advanced Loading Interface */
+        #loading-screen { 
+            position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            background: #000; z-index: 1000; transition: opacity 0.8s ease; 
+        }
+        .load-box { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
+        .circle { position: absolute; width: 100%; height: 100%; border: 2px solid transparent; border-top-color: #f00; border-radius: 50%; animation: spin 1s linear infinite; }
+        .circle-inner { width: 70%; height: 70%; border: 2px solid transparent; border-bottom-color: #f00; border-radius: 50%; animation: spin 2s linear reverse infinite; }
+        .load-text { font-family: 'Orbitron', sans-serif; color: #f00; font-size: 10px; letter-spacing: 4px; position: absolute; bottom: -50px; animation: pulse 1.5s infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* Home Screen */
+        #home-screen { 
+            position: absolute; inset: 0; display: none; 
+            flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #1a0000 0%, #000 100%);
+        }
+        #bg-stage { position: absolute; inset: 0; opacity: 0.3; pointer-events: none; }
+        .bg-player { position: absolute; width: 25px; height: 25px; background: #fff; border: 2px solid #f00; box-shadow: 0 0 15px #f00; border-radius: 4px; }
+        .bg-plt { position: absolute; height: 10px; background: #222; border-top: 2px solid #f00; box-shadow: 0 0 10px #f00; border-radius: 5px; }
+        .dot { position: absolute; background: #f00; border-radius: 50%; opacity: 0.2; pointer-events: none; }
+
+        .logo-area { text-align: center; margin-bottom: 50px; z-index: 10; animation: float 3s ease-in-out infinite; }
+        .logo-main { font-family: 'Nosifer', cursive; font-size: 14vw; color: #fff; margin: 0; text-shadow: 0 0 20px #f00, 0 0 40px #f00; }
+        .logo-sub { font-size: 12px; letter-spacing: 5px; color: #f00; text-transform: uppercase; margin-top: -10px; }
+
+        .btn-group { z-index: 10; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        .play-btn { 
+            width: 280px; height: 65px; border: none; border-radius: 50px;
+            background: linear-gradient(90deg, #f00, #800); color: #fff;
+            font-size: 18px; font-weight: 900; letter-spacing: 2px;
+            cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255,0,0,0.3); transition: 0.3s;
+        }
+        .resume-btn { 
+            width: 280px; height: 55px; border: 2px solid #555; border-radius: 50px;
+            background: rgba(255,255,255,0.05); color: #888;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            backdrop-filter: blur(10px); transition: 0.3s;
+        }
+        .play-btn:active { transform: scale(0.9); }
+        .resume-btn:disabled { opacity: 0.2; filter: grayscale(1); }
+        @keyframes float { 0%, 100% { transform: translateY(-20px); } 50% { transform: translateY(-10px); } }
+
+        /* Game Stage Area (Hidden initially) */
+        #game-stage { position: absolute; inset: 0; background: #000; display: none; z-index: 500; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="load-box">
+            <div class="circle"></div>
+            <div class="circle-inner"></div>
+            <div class="load-text">ESTABLISHING HELL</div>
+        </div>
+    </div>
+
+    <div id="home-screen">
+        <div id="bg-stage">
+            <div class="bg-plt" style="width:150px; left:10%; top:70%;"></div>
+            <div class="bg-plt" style="width:120px; left:45%; top:60%;"></div>
+            <div class="bg-plt" style="width:200px; left:75%; top:75%;"></div>
+            <div id="ai-player" class="bg-player"></div>
+        </div>
+        <div class="logo-area">
+            <h1 class="logo-main">DEVIL</h1>
+            <div class="logo-sub">Underworld Trials</div>
+        </div>
+        <div class="btn-group">
+            <button class="play-btn" onclick="startLevel(1)">START</button>
+            <button id="resBtn" class="resume-btn" onclick="resumeLevel()" disabled>RESUME TRIAL (Lvl 1)</button>
+        </div>
+    </div>
+
+    <div id="game-stage"></div>
+
+<script>
+    // 1. Improved Loading Logic
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const ls = document.getElementById('loading-screen');
+            ls.style.opacity = '0';
+            setTimeout(() => {
+                ls.style.display = 'none';
+                document.getElementById('home-screen').style.display = 'flex';
+                checkSave();
+            }, 800);
+        }, 3000);
+    });
+
+    // 2. AI Bot Background logic
+    const ai = document.getElementById('ai-player');
+    const platforms = [
+        {l: window.innerWidth*0.1, r: window.innerWidth*0.1+150, t: window.innerHeight*0.7},
+        {l: window.innerWidth*0.45, r: window.innerWidth*0.45+120, t: window.innerHeight*0.6},
+        {l: window.innerWidth*0.75, r: window.innerWidth*0.75+200, t: window.innerHeight*0.75}
+    ];
+    let ax = 50, ay = 0, avy = 0;
+
+    function updateAI() {
+        avy += 0.5; ay += avy; ax += 3;
+        if(ax > window.innerWidth) ax = -30;
+        platforms.forEach(p => {
+            if(ay + 25 >= p.t && ay + 25 <= p.t + 10 && ax + 20 > p.l && ax < p.r && avy >= 0) {
+                ay = p.t - 25; avy = -12; 
+            }
+        });
+        if(ay > window.innerHeight) { ay = -50; ax = Math.random()*window.innerWidth; avy = 0; }
+        ai.style.left = ax + 'px'; ai.style.top = ay + 'px';
+        requestAnimationFrame(updateAI);
+    }
+    updateAI();
+
+    // 3. Game Logic
+    function checkSave() {
+        const lvl = localStorage.getItem('devilLevel');
+        if(lvl && lvl > 1) {
+            document.getElementById('resBtn').disabled = false;
+            document.getElementById('resBtn').innerText = `RESUME TRIAL (LVL ${lvl})`;
+        }
+    }
+
+   function startLevel(lvl) {
+      
+        localStorage.setItem('devilLevel', lvl);
+        
+
+        if (lvl == 1) {
+     
+            window.location.href = "lvl1.html"; 
+        } else {
+          
+            window.location.href = "lvl" + lvl + 1 + ".html";
+        }
+    }
+
+    function resumeLevel() {
+        const savedLvl = localStorage.getItem('devilLevel') || 1;
+        startLevel(parseInt(savedLvl));
+    }
+
+    function resumeLevel() {
+        const savedLvl = localStorage.getItem('devilLevel') || 1;
+        startLevel(parseInt(savedLvl));
+    }
+
+    function goHome() {
+        document.getElementById('game-stage').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'flex';
+        checkSave();
+    }
+</script>
+</body>
+</html>

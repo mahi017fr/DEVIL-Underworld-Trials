@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Level Devil - Level 9 (No Border)</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Nosifer&family=Orbitron:wght@700&display=swap');
+        body { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Orbitron', sans-serif; touch-action: none; }
+        #game-wrapper { position: relative; width: 800px; height: 450px; background: radial-gradient(circle, #250000 0%, #000 100%); overflow: hidden; box-shadow: 0 0 50px rgba(255,0,0,0.1); }
+        #world { position: absolute; width: 4000px; height: 100%; left: 0; transition: transform 0.1s ease-out; }
+        #hint-box { position: absolute; top: 20px; width: 100%; text-align: center; color: #f00; font-family: 'Nosifer', cursive; font-size: 14px; text-shadow: 0 0 10px #f00; z-index: 60; letter-spacing: 1px; }
+        .player { position: absolute; width: 28px; height: 28px; background: #fff; z-index: 50; border: 2px solid #f00; box-shadow: 0 0 15px #f00; border-radius: 4px; }
+        .platform { position: absolute; height: 40px; background: #111; border-top: 4px solid #f00; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .goal { position: absolute; width: 100px; height: 120px; background: rgba(255,0,0,0.1); border: 3px solid #f00; display: flex; align-items: center; justify-content: center; color: #f00; font-family: 'Nosifer'; text-align: center; font-size: 10px; box-shadow: 0 0 20px rgba(255,0,0,0.2); }
+        .ui { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 100; text-align: center; }
+        .ui h1 { font-family: 'Nosifer', cursive; color: #f00; font-size: 40px; text-shadow: 0 0 25px #f00; margin-bottom: 30px; }
+        .btn-group { display: flex; gap: 15px; }
+        .ui-btn { padding: 12px 25px; cursor: pointer; border: 2px solid #f00; background: transparent; color: #fff; font-family: 'Orbitron'; border-radius: 50px; font-size: 14px; min-width: 130px; text-transform: uppercase; transition: 0.3s; }
+        .ui-btn:hover { background: #f00; box-shadow: 0 0 20px #f00; }
+        #controls { width: 100%; max-width: 800px; display: flex; justify-content: space-between; padding: 20px; z-index: 200; }
+        .btn { width: 75px; height: 75px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="game-wrapper">
+    <div id="hint-box">REACH THE END... IF YOU DARE</div>
+    <div id="world">
+        <div class="player" id="player"></div>
+        <div class="platform" id="pStart" style="width: 200px; left: 0; bottom: 0;"></div>
+        <div class="platform" id="t1" style="width: 180px; left: 400px; bottom: 0;"></div>
+        <div class="platform" id="t2" style="width: 180px; left: 800px; bottom: 100px;"></div>
+        <div class="platform" id="t3" style="width: 150px; left: 1200px; bottom: 50px;"></div>
+        <div class="platform" id="t4" style="width: 200px; left: 1600px; bottom: 150px;"></div>
+        <div class="platform" id="t5" style="width: 300px; left: 2000px; bottom: 0;"></div>
+        <div class="goal" id="mainGoal" style="left: 2400px; bottom: 40px;">EXIT</div>
+    </div>
+    <div class="ui" id="dieUI">
+        <h1>SHATTERED</h1>
+        <div class="btn-group">
+            <button class="ui-btn" onclick="location.reload()">RETRY</button>
+            <button class="ui-btn" onclick="location.href='index.html'">HOME</button>
+        </div>
+    </div>
+    <div class="ui" id="winUI">
+        <h1 style="color:#0f0">CLEARED</h1>
+        <div class="btn-group">
+            <button class="ui-btn" style="border-color:#0f0" onclick="location.href='lvl10.html'">NEXT</button>
+            <button class="ui-btn" onclick="location.href='index.html'">HOME</button>
+        </div>
+    </div>
+</div>
+<div id="controls">
+    <div style="display:flex; gap:20px;"><div class="btn" id="lBtn">←</div><div class="btn" id="rBtn">→</div></div>
+    <div class="btn" id="jBtn" style="width:110px; border-radius:20px; background: rgba(255,0,0,0.2);">UP</div>
+</div>
+<script>
+    const world = document.getElementById("world"), player = document.getElementById("player"), hint = document.getElementById("hint-box");
+    const t1 = document.getElementById("t1"), t2 = document.getElementById("t2"), t3 = document.getElementById("t3"), t4 = document.getElementById("t4"), t5 = document.getElementById("t5"), pStart = document.getElementById("pStart"), goal = document.getElementById("mainGoal");
+    const dieUI = document.getElementById("dieUI"), winUI = document.getElementById("winUI");
+    let pX = 50, pY = 50, vY = 0, gravity = 0.65, jumps = 0, keys = {}, isReturning = false;
+    function fit() { let sc = Math.min(window.innerWidth/800, (window.innerHeight-150)/500); document.getElementById("game-wrapper").style.transform = `scale(${sc})`; }
+    window.onresize = fit; fit();
+    function jump() { if(jumps < 2) { vY = -13; jumps++; } }
+    window.onkeydown = e => { if(e.code==="Space"||e.code==="ArrowUp") jump(); keys[e.code]=true; };
+    window.onkeyup = e => keys[e.code]=false;
+    function setup(id,code){ const b=document.getElementById(id); b.onpointerdown=e=>{ e.preventDefault(); if(id==="jBtn") jump(); else keys[code]=true; }; b.onpointerup=e=>{ e.preventDefault(); keys[code]=false; }; }
+    setup("lBtn","ArrowLeft"); setup("rBtn","ArrowRight"); setup("jBtn","Space");
+    function loop() {
+        if(dieUI.style.display==="flex" || winUI.style.display==="flex") return;
+        if(keys["ArrowLeft"]) pX -= 7; if(keys["ArrowRight"]) pX += 7;
+        vY += gravity; pY -= vY;
+        if(!isReturning) {
+            if(pX > 250 && pX < 400) { t1.style.left = "550px"; hint.innerText = "THE RUNAWAY FLOOR"; }
+            if(pX > 700 && pX < 850) { t2.style.bottom = "-150px"; hint.innerText = "THE SINKING VOID"; }
+            if(pX > 1100 && pX < 1250) { t3.style.width = "40px"; hint.innerText = "THIN AIR"; }
+            if(pX > 1500 && pX < 1650) { t4.style.bottom = "0px"; hint.innerText = "THE ELEVATOR DROP"; }
+            if(pX > 2300) { isReturning = true; hint.innerText = "NOT SO FAST! RETURN TO START!"; goal.innerText = "LOCKED"; goal.style.background = "#200"; pStart.style.width = "50px"; pStart.style.left = "20px"; }
+        } else {
+            if(pX < 2100 && pX > 1900) { t5.style.left = "1600px"; hint.innerText = "BRIDGE IS BROKEN"; }
+            if(pX < 1700 && pX > 1500) { t4.style.bottom = "200px"; t4.style.width = "50px"; hint.innerText = "JUMP OR DIE"; }
+            if(pX < 1300 && pX > 1100) { t3.style.left = "900px"; t3.style.bottom = "150px"; hint.innerText = "TELEPORTING FLOOR"; }
+            if(pX < 900 && pX > 700) { t2.style.bottom = "0px"; t2.style.left = "400px"; hint.innerText = "THE LAST HURDLE"; }
+            if(pX < 100) { hint.innerText = "LAND ON THE TINY PILLAR!"; if(pY < 100 && pX < 80 && pY > 30) winUI.style.display = "flex"; }
+        }
+        const plats = [
+            {l:parseInt(pStart.style.left), r:parseInt(pStart.style.left)+parseInt(pStart.style.width), b:0},
+            {l:parseInt(t1.style.left), r:parseInt(t1.style.left)+180, b:0},
+            {l:parseInt(t2.style.left), r:parseInt(t2.style.left)+180, b:parseInt(t2.style.bottom)},
+            {l:parseInt(t3.style.left), r:parseInt(t3.style.left)+parseInt(t3.style.width), b:parseInt(t3.style.bottom)},
+            {l:parseInt(t4.style.left), r:parseInt(t4.style.left)+parseInt(t4.style.width), b:parseInt(t4.style.bottom)},
+            {l:parseInt(t5.style.left), r:parseInt(t5.style.left)+300, b:0},
+            {l:2400, r:2550, b:40}
+        ];
+        plats.forEach(p => { if(pY <= p.b+40 && pY >= p.b && pX+20 > p.l && pX < p.r && vY >= 0) { pY = p.b+40; vY = 0; jumps = 0; } });
+        let camX = -pX + 250; if(camX > 0) camX = 0; if(camX < -1900) camX = -1900;
+        world.style.transform = `translateX(${camX}px)`;
+        if(pY < -150) dieUI.style.display = "flex";
+        player.style.left = pX + "px"; player.style.bottom = pY + "px";
+        requestAnimationFrame(loop);
+    }
+    loop();
+</script>
+</body>
+</html>
