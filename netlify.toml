@@ -4,8 +4,9 @@ publish = "New folder (3)"
 
 [[redirects]]
 from = "/.well-known/*"
-to = "/.well-known/:splat"
+to = "/well-known/:splat"
 status = 200
+force = true
 
 [[redirects]]
 from = "/*"
@@ -17,4 +18,10 @@ for = "/.well-known/farcaster.json"
   [headers.values]
   Content-Type = "application/json; charset=utf-8"
   # Short cache to allow quick frame metadata updates.
+  Cache-Control = "public, max-age=300"
+
+[[headers]]
+for = "/well-known/farcaster.json"
+  [headers.values]
+  Content-Type = "application/json; charset=utf-8"
   Cache-Control = "public, max-age=300"

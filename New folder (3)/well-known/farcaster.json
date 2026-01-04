@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "baseBuilder": {
+    "allowedAddresses": ["0xeAbEc05d7c47EFf16c279d9091F4008324c693cC"]
+  },
+  "frame": {
+    "version": "next",
+    "name": "Slay to Earn",
+    "subtitle": "Slay to Earn!",
+    "description": "Slay Enemies. Earn Rewards.",
+    "homeUrl": "https://slay.farverse.games/",
+    "iconUrl": "https://assets.foundly.dev/slay/logo/logo_256.png",
+    "imageUrl": "https://assets.foundly.dev/slay/embed.png",
+    "heroImageUrl": "https://assets.foundly.dev/slay/embed.png",
+    "buttonTitle": "Slay to Earn!",
+    "tagline": "Slay to Earn!",
+    "splashImageUrl": "https://assets.foundly.dev/slay/logo/logo_transparent.png",
+    "splashBackgroundColor": "#1d0d28",
+    "webhookUrl": "https://slay.farverse.games/api/webhook",
+    "primaryCategory": "games",
+    "tags": ["slay", "earn", "tokens", "rpg", "rewards"],
+    "ogTitle": "Slay to Earn",
+    "ogDescription": "Slay Enemies. Earn Rewards.",
+    "ogImageUrl": "https://assets.foundly.dev/slay/preview.png"
+  }
+}
