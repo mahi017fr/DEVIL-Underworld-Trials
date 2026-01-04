@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjEzNDA2NDUsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhCMkFjN0VmMjEzMzY0NjBGQjU0QkM4MGM1NTFkNDhhNDg5ZjdhZTc4In0",
+    "payload": "eyJkb21haW4iOiJzaWx2ZXItZ2luZ2Vyc25hcC0yODIwZjUubmV0bGlmeS5hcHAifQ",
+    "signature": "HN7WJQlHB1Zk62sGJNagAFk3oRzmh5yn+RQSPc0OfYAoopiZWKWDgVkcpo8aSX/Fvp0GqqobmAjpbCegPJAuohw="
+  },
+  "baseBuilder": {
+    "allowedAddresses": ["0x8642Fd7384A1BF93ECaE47fc28562A861aa0d8f8"]
+  },
+  "frame": {
+    "version": "next",
+    "name": "Devil UT",
+    "subtitle": "Devil Under World Trials",
+    "description": "Kill Devil. Earn Rewards.",
+    "homeUrl": "https://silver-gingersnap-2820f5.netlify.app",
+    "iconUrl": "https://i.ibb.co.com/gL4HN64d/wmremove-transformed-1.jpg",
+    "imageUrl": "https://assets.foundly.dev/slay/embed.png",
+    "heroImageUrl": "https://assets.foundly.dev/slay/embed.png",
+    "buttonTitle": "Kill Devil",
+    "tagline": "Devil Under World Trials",
+    "splashImageUrl": "https://assets.foundly.dev/slay/logo/logo_transparent.png",
+    "splashBackgroundColor": "#1d0d28",
+    "webhookUrl": "https://slay.farverse.games/api/webhook",
+    "primaryCategory": "games",
+    "tags": ["slay", "earn", "tokens", "rpg", "rewards"],
+    "ogTitle": "Devil Under World Trials",
+    "ogDescription": "Kill Devil. Earn Rewards.",
+    "ogImageUrl": "https://assets.foundly.dev/slay/preview.png"
+  }
+}

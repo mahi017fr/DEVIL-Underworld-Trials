@@ -1,0 +1,84 @@
+বুঝতে পেরেছি, কন্ট্রোল বাটনগুলোর সাইজ ঠিক করে দিয়েছি এবং হোম, রিট্রাই ও নেক্সট বাটনগুলো আগের লেভেলের স্টাইলে সেট করে দিয়েছি।
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Level Devil - Level 4 Final</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Nosifer&family=Orbitron:wght@700&display=swap');
+        body { margin: 0; padding: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; overflow: hidden; font-family: 'Orbitron', sans-serif; touch-action: none; }
+        #game-box { position: relative; width: 800px; height: 500px; background: radial-gradient(circle, #200000 0%, #000 100%); overflow: hidden; flex-shrink: 0; }
+        #darkness { position: absolute; inset: 0; background: transparent; z-index: 15; pointer-events: none; }
+        .player { position: absolute; width: 30px; height: 30px; background: #fff; border: 2px solid #f00; box-shadow: 0 0 15px #f00; border-radius: 4px; z-index: 20; }
+        .platform { position: absolute; height: 40px; background: #111; border-top: 4px solid #f00; transition: opacity 0.5s; }
+        .spike { position: absolute; width: 28px; height: 28px; background: #ff4d4d; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); z-index: 5; }
+        .goal { position: absolute; width: 80px; height: 60px; background: rgba(0,255,0,0.1); bottom: 40px; right: 20px; border: 3px solid #0f0; display: flex; align-items: center; justify-content: center; color: #0f0; text-shadow: 0 0 10px #0f0; z-index: 10; }
+        .ui { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 100; text-align: center; }
+        .ui h1 { font-family: 'Nosifer', cursive; font-size: 35px; color: #f00; text-shadow: 0 0 20px #f00; margin-bottom: 20px; }
+        .ui-btn { padding: 12px 25px; cursor: pointer; border: 2px solid #f00; background: transparent; color: #fff; font-family: 'Orbitron'; border-radius: 50px; margin: 5px; min-width: 120px; font-size: 14px; }
+        #controls { width: 100%; max-width: 800px; padding: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 200; }
+        .btn { width: 75px; height: 75px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="game-box">
+    <div id="darkness"></div>
+    <div class="player" id="player"></div>
+    <div class="platform" style="width: 150px; left: 0; bottom: 0;"></div> 
+    <div class="platform ghost" style="width: 110px; left: 220px; bottom: 130px;"></div> 
+    <div class="platform ghost" style="width: 110px; left: 480px; bottom: 260px;"></div> 
+    <div class="platform ghost" style="width: 110px; left: 180px; bottom: 380px;"></div> 
+    <div class="platform" style="width: 150px; right: 0; bottom: 0;"></div> 
+    <div class="spike" id="s1" style="left: 800px; bottom: 180px; transform: rotate(90deg);"></div>
+    <div class="spike" id="s2" style="left: -50px; bottom: 300px; transform: rotate(-90deg);"></div>
+    <div class="goal">EXIT</div>
+    <div class="ui" id="dieUI"><h1>WASTED</h1><div style="display:flex; gap:10px;"><button class="ui-btn" onclick="resetGame()">RETRY</button><button class="ui-btn" onclick="location.href='index.html'">HOME</button></div></div>
+    <div class="ui" id="winUI"><h1 style="color:#0f0;">SURVIVOR</h1><div style="display:flex; gap:10px;"><button class="ui-btn" style="border-color:#0f0" onclick="location.href='lvl5.html'">NEXT</button><button class="ui-btn" onclick="location.href='index.html'">HOME</button></div></div>
+</div>
+<div id="controls">
+    <div style="display: flex; gap: 20px;"><div class="btn" id="lBtn">←</div><div class="btn" id="rBtn">→</div></div>
+    <div class="btn" id="jBtn" style="width: 90px; border-radius: 15px;">UP</div>
+</div>
+<script>
+    const box=document.getElementById("game-box"), p=document.getElementById("player"), ghosts=document.querySelectorAll(".ghost"), dark=document.getElementById("darkness"), s1=document.getElementById("s1"), s2=document.getElementById("s2"), dieUI=document.getElementById("dieUI"), winUI=document.getElementById("winUI");
+    let pX=20, pY=40, vY=0, gravity=0.65, jumps=0, keys={}, isDark=false, s1X=800, s2X=-50;
+    let mX=[220, 480, 180], mDir=[1.5, -2, 2.2];
+    function res() { let sc=Math.min(window.innerWidth/800, (window.innerHeight-150)/500); box.style.transform=`scale(${sc})`; }
+    window.onresize=res; res();
+    window.onkeydown=e=>{ if((e.code==="Space"||e.code==="ArrowUp")&&jumps<2){ vY=-13; jumps++; } keys[e.code]=true; };
+    window.onkeyup=e=>keys[e.code]=false;
+    function btn(id,c){ const b=document.getElementById(id); b.onpointerdown=e=>{ e.preventDefault(); if(id==="jBtn"){ if(jumps<2){ vY=-13; jumps++; } } else keys[c]=true; }; b.onpointerup=e=>{ e.preventDefault(); keys[c]=false; }; }
+    btn("lBtn","ArrowLeft"); btn("rBtn","ArrowRight"); btn("jBtn","Space");
+    function loop() {
+        if(dieUI.style.display==="flex"||winUI.style.display==="flex") return;
+        if(keys["ArrowLeft"]) pX-=5; if(keys["ArrowRight"]) pX+=5;
+        vY+=gravity; pY-=vY;
+        mX[0]+=3*mDir[0]; if(mX[0]>380||mX[0]<150) mDir[0]*=-1;
+        mX[1]+=4.5*mDir[1]; if(mX[1]>680||mX[1]<400) mDir[1]*=-1;
+        mX[2]+=3.5*mDir[2]; if(mX[2]>450||mX[2]<100) mDir[2]*=-1;
+        ghosts[0].style.left=mX[0]+"px"; ghosts[1].style.left=mX[1]+"px"; ghosts[2].style.left=mX[2]+"px";
+        s1X-=8; if(s1X<-50) s1X=900; s1.style.left=s1X+"px";
+        s2X+=9; if(s2X>900) s2X=-100; s2.style.left=s2X+"px";
+        if(isDark) dark.style.background=`radial-gradient(circle 90px at ${pX+15}px ${500-pY-15}px, transparent 10%, rgba(0,0,0,0.98) 100%)`;
+        if(pY<=40 && (pX<140||pX>640)){ pY=40; vY=0; jumps=0; }
+        if(pY<=170&&pY>=130&&pX>mX[0]-25&&pX<mX[0]+100){ 
+            pY=170; vY=0; jumps=0; pX+=3*mDir[0]; 
+            if(!isDark){ isDark=true; dark.style.background="rgba(0,0,0,0.98)"; ghosts.forEach(g=>g.style.opacity="0"); }
+        }
+        if(pY<=300&&pY>=260&&pX>mX[1]-25&&pX<mX[1]+100){ pY=300; vY=0; jumps=0; pX+=4.5*mDir[1]; }
+        if(pY<=420&&pY>=380&&pX>mX[2]-25&&pX<mX[2]+100){ pY=420; vY=0; jumps=0; pX+=3.5*mDir[2]; }
+        if(pY<-60||pY>560||(Math.abs(pX-s1X)<25&&Math.abs((500-pY)-180)<25)||(Math.abs(pX-s2X)<25&&Math.abs((500-pY)-300)<25)) dieUI.style.display="flex";
+        if(pX>720&&pY<100) winUI.style.display="flex";
+        pX=Math.max(0,Math.min(770,pX)); p.style.left=pX+"px"; p.style.bottom=pY+"px";
+        requestAnimationFrame(loop);
+    }
+    function resetGame(){ pX=20; pY=40; vY=0; jumps=0; isDark=false; s1X=800; s2X=-50; ghosts.forEach(g=>g.style.opacity="1"); dark.style.background="transparent"; dieUI.style.display="none"; requestAnimationFrame(loop); }
+    loop();
+</script>
+</body>
+</html>
+
